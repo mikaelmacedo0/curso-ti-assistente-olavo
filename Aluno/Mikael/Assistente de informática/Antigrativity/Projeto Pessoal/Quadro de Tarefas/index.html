@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quadro de Tarefas (Pendente • Fazendo • Finalizado)</title>
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: #121a33;
+      --panel-2: #0f1730;
+      --text: #e8ecff;
+      --muted: #a9b2d6;
+      --border: rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+
+      --pendente: #ffb020;
+      --fazendo: #4ea1ff;
+      --finalizado: #31d07b;
+
+      --radius: 14px;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 800px at 10% 0%, #182457 0%, var(--bg) 60%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container{
+      max-width: 1100px;
+      margin: 28px auto;
+      padding: 0 16px 40px;
+    }
+
+    header{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    h1{
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .composer{
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1.2fr .9fr .7fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .composer input, .composer select{
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(10,15,35,.6);
+      color: var(--text);
+      outline: none;
+    }
+    .composer input::placeholder{ color: rgba(232,236,255,.55); }
+
+    .btn{
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform .05s ease, background .2s ease;
+      white-space: nowrap;
+    }
+    .btn:hover{ background: rgba(255,255,255,.16); }
+    .btn:active{ transform: translateY(1px); }
+
+    .board{
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .column{
+      padding: 12px;
+      min-height: 420px;
+    }
+
+    .column-header{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tag{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.08);
+      font-weight: 650;
+      font-size: 13px;
+      letter-spacing: .2px;
+    }
+    .dot{ width: 10px; height: 10px; border-radius: 50%; }
+
+    .count{
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.12);
+    }
+
+    .dropzone{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 8px 4px 4px;
+      border-radius: 12px;
+      min-height: 340px;
+    }
+    .dropzone.dragover{
+      outline: 2px dashed rgba(255,255,255,.25);
+      outline-offset: 6px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .task{
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(10,15,35,.65);
+      box-shadow: 0 8px 20px rgba(0,0,0,.25);
+      cursor: grab;
+      user-select: none;
+    }
+    .task:active{ cursor: grabbing; }
+
+    .task-title{
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .task-meta{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .pill{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .task-actions{
+      display: flex;
+      gap: 8px;
+    }
+    .btn-small{
+      padding: 7px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+    .danger{
+      border-color: rgba(255,80,80,.35);
+      background: rgba(255,80,80,.12);
+    }
+    .danger:hover{ background: rgba(255,80,80,.18); }
+
+    @media (max-width: 980px){
+      .composer{ grid-template-columns: 1fr 1fr; }
+      .board{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Quadro de Tarefas</h1>
+        <div class="subtitle">
+          Crie tarefas e mova entre colunas arrastando (Pendente → Fazendo → Finalizado). NLBR
+          Tudo fica salvo no seu navegador (localStorage).
+        </div>
+      </div>
+    </header>
+
+    <section class="card composer" aria-label="Criar nova tarefa">
+      <input id="titleInput" type="text" placeholder="Título da tarefa (ex.: Estudar JavaScript)" maxlength="80" />
+      <input id="descInput" type="text" placeholder="Descrição curta (opcional)" maxlength="120" />
+      <select id="statusSelect" aria-label="Status">
+        <option value="pendente">Pendente</option>
+        <option value="fazendo">Fazendo</option>
+        <option value="finalizado">Finalizado</option>
+      </select>
+      <button class="btn" id="addBtn">Adicionar</button>
+    </section>
+
+    <section class="board" aria-label="Quadro Kanban">
+      <div class="card column">
+        <div class="column-header">
+          <div class="tag"><span class="dot" style="background: var(--pendente)"></span> Pendente</div>
+          <div class="count" id="count-pendente">0</div>
+        </div>
+        <div class="dropzone" data-status="pendente" id="col-pendente"></div>
+      </div>
+
+      <div class="card column">
+        <div class="column-header">
+          <div class="tag"><span class="dot" style="background: var(--fazendo)"></span> Fazendo</div>
+          <div class="count" id="count-fazendo">0</div>
+        </div>
+        <div class="dropzone" data-status="fazendo" id="col-fazendo"></div>
+      </div>
+
+      <div class="card column">
+        <div class="column-header">
+          <div class="tag"><span class="dot" style="background: var(--finalizado)"></span> Finalizado</div>
+          <div class="count" id="count-finalizado">0</div>
+        </div>
+        <div class="dropzone" data-status="finalizado" id="col-finalizado"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ======= Modelo =======
+    // task = { id, title, desc, status, createdAt }
+
+    const STORAGE_KEY = "kanban_tasks_v1";
+
+    const el = {
+      titleInput: document.getElementById("titleInput"),
+      descInput: document.getElementById("descInput"),
+      statusSelect: document.getElementById("statusSelect"),
+      addBtn: document.getElementById("addBtn"),
+
+      cols: {
+        pendente: document.getElementById("col-pendente"),
+        fazendo: document.getElementById("col-fazendo"),
+        finalizado: document.getElementById("col-finalizado"),
+      },
+      counts: {
+        pendente: document.getElementById("count-pendente"),
+        fazendo: document.getElementById("count-fazendo"),
+        finalizado: document.getElementById("count-finalizado"),
+      }
+    };
+
+    let tasks = loadTasks();
+    renderAll();
+
+    // ======= Eventos: criar tarefa =======
+    el.addBtn.addEventListener("click", addTaskFromForm);
+    el.titleInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addTaskFromForm();
+    });
+
+    function addTaskFromForm(){
+      const title = el.titleInput.value.trim();
+      const desc  = el.descInput.value.trim();
+      const status = el.statusSelect.value;
+
+      if(!title){
+        alert("Digite um título para a tarefa.");
+        el.titleInput.focus();
+        return;
+      }
+
+      const task = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+        title,
+        desc,
+        status,
+        createdAt: new Date().toISOString()
+      };
+
+      tasks.unshift(task);
+      saveTasks();
+      renderAll();
+
+      el.titleInput.value = "";
+      el.descInput.value = "";
+      el.titleInput.focus();
+    }
+
+    // ======= Drag & Drop =======
+    let draggingId = null;
+
+    Object.values(el.cols).forEach(zone => {
+      zone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        zone.classList.add("dragover");
+      });
+      zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
+      zone.addEventListener("drop", () => {
+        zone.classList.remove("dragover");
+        const status = zone.dataset.status;
+        if(draggingId) moveTask(draggingId, status);
+      });
+    });
+
+    function moveTask(id, newStatus){
+      const t = tasks.find(x => x.id === id);
+      if(!t) return;
+      t.status = newStatus;
+      saveTasks();
+      renderAll();
+    }
+
+    // ======= Render =======
+    function renderAll(){
+      // limpar colunas
+      for(const k of Object.keys(el.cols)){
+        el.cols[k].innerHTML = "";
+      }
+
+      // render por status
+      for(const t of tasks){
+        el.cols[t.status].appendChild(renderTaskCard(t));
+      }
+
+      // contadores
+      for(const status of ["pendente","fazendo","finalizado"]){
+        el.counts[status].textContent = tasks.filter(t => t.status === status).length;
+      }
+    }
+
+    function renderTaskCard(task){
+      const card = document.createElement("div");
+      card.className = "task";
+      card.draggable = true;
+      card.dataset.id = task.id;
+
+      card.addEventListener("dragstart", () => draggingId = task.id);
+      card.addEventListener("dragend", () => draggingId = null);
+
+      const title = document.createElement("p");
+      title.className = "task-title";
+      title.textContent = task.title;
+
+      const meta = document.createElement("div");
+      meta.className = "task-meta";
+
+      const created = new Date(task.createdAt);
+      meta.appendChild(pill("Criado: " + created.toLocaleString()));
+
+      if(task.desc){
+        meta.appendChild(pill(task.desc));
+      }
+
+      const actions = document.createElement("div");
+      actions.className = "task-actions";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-small";
+      editBtn.textContent = "Editar";
+      editBtn.addEventListener("click", () => editTask(task.id));
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn btn-small danger";
+      delBtn.textContent = "Excluir";
+      delBtn.addEventListener("click", () => deleteTask(task.id));
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+
+      card.appendChild(title);
+      card.appendChild(meta);
+      card.appendChild(actions);
+
+      return card;
+    }
+
+    function pill(text){
+      const s = document.createElement("span");
+      s.className = "pill";
+      s.textContent = text;
+      return s;
+    }
+
+    // ======= Editar / Excluir =======
+    function editTask(id){
+      const t = tasks.find(x => x.id === id);
+      if(!t) return;
+
+      const newTitle = prompt("Novo título:", t.title);
+      if(newTitle === null) return; // cancelou
+      const titleTrim = newTitle.trim();
+      if(!titleTrim){
+        alert("Título não pode ficar vazio.");
+        return;
+      }
+
+      const newDesc = prompt("Nova descrição (opcional):", t.desc || "");
+      if(newDesc === null) return;
+
+      t.title = titleTrim;
+      t.desc = newDesc.trim();
+      saveTasks();
+      renderAll();
+    }
+
+    function deleteTask(id){
+      const t = tasks.find(x => x.id === id);
+      if(!t) return;
+
+      if(!confirm(`Excluir a tarefa "${t.title}"?`)) return;
+
+      tasks = tasks.filter(x => x.id !== id);
+      saveTasks();
+      renderAll();
+    }
+
+    // ======= Storage =======
+    function saveTasks(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function loadTasks(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return [];
+        const parsed = JSON.parse(raw);
+        if(!Array.isArray(parsed)) return [];
+        return parsed;
+      } catch {
+        return [];
+      }
+    }
+  </script>
+</body>
+</html>

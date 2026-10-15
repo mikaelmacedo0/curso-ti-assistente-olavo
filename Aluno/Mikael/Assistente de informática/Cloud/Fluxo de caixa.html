@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fluxo de Caixa</title>
+<!-- [CLOUD-ESTRUTURA: CSS3 DESIGN] -->
+<style>
+:root{--ink:#1f2933;--mut:#5f6b77;--bg:#f1f3f5;--line:#dde2e7;--in:#0b8f63;--inb:#e3f5ed;--out:#d9443f;--outb:#fdeceb;--pri:#243b53}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+h1{font-size:1.35rem;margin:0}h2{font-size:1rem;margin:0 0 12px}p{margin:0}
+.mut{color:var(--mut);font-size:.85rem}
+.top{background:var(--pri);color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.top .mut{color:#c5d0dc}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.day{display:flex;gap:6px;align-items:center;font-size:.85rem;margin:0;color:#fff}
+.day input{width:auto;margin:0;padding:6px 8px}
+main{max-width:1240px;margin:0 auto;padding:18px;display:grid;gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(31,41,51,.06)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.cards .card b{display:block;font-size:1.5rem;font-variant-numeric:tabular-nums;margin-top:4px}
+.cards .in{border-left:4px solid var(--in)}.cards .out{border-left:4px solid var(--out)}
+.cards .pos{background:var(--inb);border-color:var(--in)}.cards .pos b{color:#087a53}
+.cards .neg{background:var(--outb);border-color:var(--out)}.cards .neg b{color:#b3322e}
+.st{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.75rem;font-weight:700;background:var(--inb);color:#087a53}
+.st.fe{background:#e7ebf0;color:var(--pri)}
+.layout{display:grid;grid-template-columns:minmax(270px,340px) 1fr;gap:16px;align-items:start}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+label{display:block;font-size:.8rem;font-weight:600;color:var(--mut);margin-bottom:10px}
+input,select,button{font:inherit}
+input,select{width:100%;margin-top:4px;padding:9px 10px;border:1px solid #c3cbd3;border-radius:8px;background:#fff;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,button:focus-visible{outline:0;border-color:var(--pri);box-shadow:0 0 0 3px rgba(36,59,83,.25)}
+.btn{padding:8px 13px;border:1px solid #c3cbd3;border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;font-weight:600;font-size:.85rem;transition:background .15s,transform .05s}
+.btn:hover{background:#eef1f4}.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--in);border-color:var(--in);color:#fff}.btn.pri:hover{background:#087a53}
+.btn.dng{color:#b3322e}.btn.dng:hover{background:var(--outb)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end;margin-bottom:6px}
+.sum{display:flex;flex-wrap:wrap;gap:16px;font-size:.9rem;margin:8px 0 12px;font-variant-numeric:tabular-nums}
+.sc{overflow-x:auto}main>*,.layout>*,.two>*{min-width:0}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+.sc>table{min-width:780px}
+th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:.78rem;color:var(--mut);background:#f7f8fa}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.in{color:#087a53;font-weight:600}td.out{color:#b3322e;font-weight:600}
+.tg{padding:2px 8px;border-radius:99px;font-size:.75rem;font-weight:700}
+.tg.in{background:var(--inb);color:#087a53}.tg.out{background:var(--outb);color:#b3322e}
+.lk{border:0;background:none;color:var(--pri);font-weight:600;cursor:pointer;padding:4px 6px;border-radius:6px}
+.lk:hover{background:#eef1f4}.lk.dg{color:#b3322e}
+tfoot td{font-weight:700;background:#f7f8fa}
+.empty{color:var(--mut);padding:18px;text-align:center}
+.tot td{font-weight:700;background:#f7f8fa}
+.cw{position:relative;height:260px}
+.br{display:grid;grid-template-columns:1fr 2fr;gap:8px;align-items:center;font-size:.85rem;margin:6px 0}
+.br i{display:block;height:12px;border-radius:6px;grid-column:2}.br b{grid-column:2;font-weight:600;color:var(--mut)}
+.gi{background:var(--in)}.go{background:var(--out)}
+#toast{position:fixed;right:16px;bottom:16px;display:grid;gap:8px;z-index:9;max-width:min(92vw,380px)}
+.t{padding:11px 14px;border-radius:10px;color:#fff;background:var(--pri);box-shadow:0 6px 18px rgba(0,0,0,.2)}
+.t.err{background:#b3322e}.t.ok{background:#087a53}
+.printonly{display:none}
+@media(max-width:900px){.layout,.two{grid-template-columns:1fr}.top{padding:12px}main{padding:12px}}
+@media print{
+ .noprint,.acts,form,.filters,.ac,#toast,.top .mut{display:none!important}
+ body{background:#fff}.top{background:none;color:#000;padding:0 0 8px}
+ .card{box-shadow:none;border:1px solid #bbb;break-inside:avoid}
+ .layout,.two{display:block}.card{margin-bottom:10px}
+ .printonly{display:block!important;margin-bottom:8px}
+ .sc>table{min-width:0}
+}
+</style>
+</head>
+<!-- [CLOUD-ESTRUTURA: HTML5] -->
+<body>
+<header class="top">
+ <div><h1>Fluxo de Caixa</h1><p class="mut">Controle diário de entradas e saídas</p></div>
+ <div class="acts">
+  <label class="day noprint">Dia <input type="date" id="dia"></label>
+  <button class="btn pri noprint" id="bSalvar" type="button">Salvar dados</button>
+  <button class="btn noprint" id="bFechar" type="button">Salvar movimentação diária</button>
+  <button class="btn noprint" id="bCsv" type="button">Excel/CSV</button>
+  <button class="btn noprint" id="bPrint" type="button">Imprimir / PDF</button>
+  <button class="btn noprint" id="bBkp" type="button">Exportar backup</button>
+  <button class="btn noprint" id="bImp" type="button">Importar backup</button>
+  <button class="btn dng noprint" id="bReset" type="button">Resetar</button>
+  <input type="file" id="fImp" accept=".json,application/json" hidden>
+ </div>
+</header>
+<main>
+ <p class="printonly" id="pInfo"></p>
+ <section class="cards" aria-label="Resumo do dia">
+  <div class="card"><span class="mut">Saldo anterior</span><b id="cAnt"></b><span class="st" id="st"></span></div>
+  <div class="card in"><span class="mut">Total de entradas</span><b id="cEnt"></b></div>
+  <div class="card out"><span class="mut">Total de saídas</span><b id="cSai"></b></div>
+  <div class="card" id="cSalCard"><span class="mut">Saldo atual</span><b id="cSal"></b></div>
+ </section>
+ <div class="layout">
+  <section class="card noprint" aria-label="Lançamento">
+   <h2 id="fTit">Novo lançamento</h2>
+   <form id="f" novalidate>
+    <label>Data <input type="date" id="fData" required></label>
+    <div class="row">
+     <label>Tipo <select id="fTp"><option value="R">Receita</option><option value="D">Despesa</option></select></label>
+     <label>Forma (tipo) <select id="fForma"><option>DINHEIRO</option><option>CARTÃO</option><option>PIX</option><option>VALE</option></select></label>
+    </div>
+    <label>Categoria <input id="fCat" list="cats" maxlength="60" placeholder="Ex.: Vendas de mercadorias" required></label>
+    <datalist id="cats"><option value="Vendas de mercadorias"><option value="Compra de quentinha"><option value="Fornecedores"><option value="Salários"><option value="Aluguel"><option value="Impostos"><option value="Outros"></datalist>
+    <label>Histórico <input id="fHist" maxlength="120" placeholder="Ex.: REC REF VENDAS DE MERCADORIAS" required></label>
+    <label>Valor (R$) <input type="number" id="fVal" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00" required></label>
+    <div class="acts"><button class="btn pri" id="bSv" type="submit">Cadastrar lançamento</button><button class="btn" id="bCn" type="button" hidden>Cancelar edição</button></div>
+   </form>
+  </section>
+  <section class="card" aria-label="Lançamentos">
+   <h2>Lançamentos</h2>
+   <div class="filters">
+    <label>De <input type="date" id="fDe"></label>
+    <label>Até <input type="date" id="fAte"></label>
+    <label>Tipo <select id="fTipo"><option value="">Todos</option><option value="R">Receita</option><option value="D">Despesa</option></select></label>
+    <label>Busca <input id="fQ" type="search" placeholder="Palavra-chave"></label>
+    <button class="btn" id="bLimpa" type="button" style="margin-bottom:10px">Limpar filtros</button>
+   </div>
+   <div class="sum" id="sum" aria-live="polite"></div>
+   <div class="sc"><table>
+    <thead><tr><th>Data</th><th>Nº ordem</th><th>Tipo</th><th>Categoria</th><th>Forma</th><th>Histórico</th><th class="n">Entrada</th><th class="n">Saída</th><th class="ac">Ações</th></tr></thead>
+    <tbody id="tb"></tbody>
+   </table></div>
+  </section>
+ </div>
+ <div class="two">
+  <section class="card" aria-label="Detalhes do saldo">
+   <h2>Detalhes do saldo <span class="mut" id="dTit"></span></h2>
+   <div class="sc"><table><thead><tr><th>Detalhes do saldo</th><th class="n">Entrada</th><th class="n">Saída</th></tr></thead><tbody id="dt"></tbody></table></div>
+   <label class="noprint" style="margin-top:12px">Saldo inicial do caixa (antes do 1º lançamento) <input type="number" id="sIni" min="0" step="0.01"></label>
+  </section>
+  <section class="card" aria-label="Distribuição por categoria">
+   <h2>Distribuição por categoria</h2>
+   <label class="noprint">Mostrar <select id="cTipo"><option value="R">Receitas</option><option value="D">Despesas</option></select></label>
+   <div class="cw"><canvas id="cv2"></canvas></div><div id="fb2"></div>
+  </section>
+ </div>
+ <section class="card" aria-label="Evolução financeira">
+  <h2>Evolução financeira</h2>
+  <div class="cw"><canvas id="cv1"></canvas></div><div id="fb1"></div>
+ </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" onerror="window.__semChart=1"></script>
+<!-- [CLOUD-ESTRUTURA: JAVASCRIPT ENGINE] -->
+<script>
+(()=>{
+const KEY='fluxo_caixa_v1',FORMAS=['DINHEIRO','CARTÃO','PIX','VALE'];
+const $=s=>document.querySelector(s),brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const r2=n=>Math.round((n+Number.EPSILON)*100)/100,pad=n=>String(n).padStart(2,'0');
+const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const fd=d=>d.split('-').reverse().join('/');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isR=t=>t.tipo==='R',net=t=>isR(t)?t.valor:-t.valor,sum=a=>r2(a.reduce((x,t)=>x+t.valor,0));
+let S,dia=hoje(),edit=null,charts=[];
+
+/* ---------- Estado e persistência ---------- */
+function seed(){const d=hoje(),V='Vendas de mercadorias',H='REC REF VENDAS DE MERCADORIAS',Q='PG REF COMPRA DE QUENTINHA',C='Compra de quentinha';
+ const m=[['R',V,'DINHEIRO',H,352.25],['R',V,'CARTÃO',H,254.28],['D',C,'VALE',Q,25],['R',V,'DINHEIRO',H,150],['R',V,'PIX',H,142.84],['D',C,'VALE',Q,24]];
+ return{v:1,ini:250,seq:7,fechados:{},tx:m.map((x,i)=>({id:i+1,data:d,tipo:x[0],cat:x[1],forma:x[2],hist:x[3],valor:x[4]}))}}
+const valid=o=>!!o&&o.v===1&&Number.isFinite(o.ini)&&o.ini>=0&&Array.isArray(o.tx)&&!!o.fechados&&typeof o.fechados==='object'&&
+ o.tx.every(t=>t&&Number.isInteger(t.id)&&/^\d{4}-\d{2}-\d{2}$/.test(t.data)&&(t.tipo==='R'||t.tipo==='D')&&FORMAS.includes(t.forma)&&typeof t.cat==='string'&&typeof t.hist==='string'&&Number.isFinite(t.valor)&&t.valor>0);
+const fixSeq=()=>{S.seq=Math.max(0,...S.tx.map(t=>t.id))+1};
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(S));return true}catch(e){toast('Não foi possível gravar no navegador. Exporte um backup para não perder dados.','err');return false}}
+function toast(m,k){const e=document.createElement('div');e.className='t '+(k||'ok');e.textContent=m;$('#toast').appendChild(e);setTimeout(()=>e.remove(),k==='err'?6000:3500)}
+
+/* ---------- Cálculos (replicam a planilha) ---------- */
+function calc(d){
+ const day=S.tx.filter(t=>t.data===d),ent=sum(day.filter(isR)),sai=sum(day.filter(t=>!isR(t)));
+ const ant=r2(S.ini+S.tx.filter(t=>t.data<d).reduce((a,t)=>a+net(t),0));
+ const atual=r2(ent-sai+ant); // SALDO ATUAL = ENTRADA - SAÍDA + SALDO ANTERIOR
+ const forma=FORMAS.map(f=>({f,e:sum(day.filter(t=>isR(t)&&t.forma===f)),s:sum(day.filter(t=>!isR(t)&&t.forma===f))}));
+ const fech=r2(forma.reduce((a,x)=>a+x.e-x.s,0)); // FECHAMENTO = entradas por forma - saídas por forma
+ return{day,ent,sai,ant,atual,forma,fech,cE:r2(ent+ant),cS:r2(sai+atual)};
+}
+const ordem=()=>{const c={},m={};[...S.tx].sort((a,b)=>a.id-b.id).forEach(t=>{c[t.data]=(c[t.data]||0)+1;m[t.id]=c[t.data]});return m};
+const filt=()=>{const de=$('#fDe').value,ate=$('#fAte').value,tp=$('#fTipo').value,q=$('#fQ').value.trim().toLowerCase();
+ return S.tx.filter(t=>(!de||t.data>=de)&&(!ate||t.data<=ate)&&(!tp||t.tipo===tp)&&(!q||(t.cat+' '+t.hist+' '+t.forma+' '+t.valor).toLowerCase().includes(q)))
+ .sort((a,b)=>a.data.localeCompare(b.data)||a.id-b.id)};
+
+/* ---------- Fechamento diário ---------- */
+function guard(d){if(!confirm('O dia '+fd(d)+' está fechado. Deseja reabri-lo para alterar?'))return false;
+ delete S.fechados[d];persist();render();toast('Dia reaberto. Salve a movimentação diária novamente ao terminar.');return true}
+$('#bFechar').onclick=()=>{
+ if(S.fechados[dia]){guard(dia);return}
+ const c=calc(dia);if(!c.day.length)return toast('Não há lançamentos neste dia para fechar.','err');
+ if(!confirm('Fechar o dia '+fd(dia)+'?\nEntradas: '+brl(c.ent)+'\nSaídas: '+brl(c.sai)+'\nSaldo atual: '+brl(c.atual)+'\n\nOs lançamentos ficarão bloqueados.'))return;
+ S.fechados[dia]={em:new Date().toISOString(),ant:c.ant,ent:c.ent,sai:c.sai,atual:c.atual};
+ if(persist()){render();toast('Movimentação diária salva e dia fechado.')}};
+
+/* ---------- Cadastro / edição / exclusão ---------- */
+function resetForm(){$('#f').reset();edit=null;$('#fData').value=dia;$('#bSv').textContent='Cadastrar lançamento';$('#fTit').textContent='Novo lançamento';$('#bCn').hidden=true}
+$('#bCn').onclick=resetForm;
+$('#f').onsubmit=e=>{e.preventDefault();
+ const v={data:$('#fData').value,tipo:$('#fTp').value,cat:$('#fCat').value.trim(),forma:$('#fForma').value,hist:$('#fHist').value.trim(),valor:r2(parseFloat($('#fVal').value))},er=[];
+ if(!v.data)er.push('Informe a data.');else if(v.data>hoje())er.push('A data não pode ser futura.');
+ if(!v.cat)er.push('Informe a categoria.');if(!v.hist)er.push('Informe o histórico.');
+ if(!(v.valor>0))er.push('Informe um valor maior que zero (valores negativos não são aceitos).');
+ if(!['R','D'].includes(v.tipo)||!FORMAS.includes(v.forma))er.push('Tipo ou forma inválidos.');
+ if(er.length)return toast(er.join(' '),'err');
+ const old=edit&&S.tx.find(t=>t.id===edit);
+ if(S.fechados[v.data]&&!guard(v.data))return;
+ if(old)Object.assign(old,v);else S.tx.push({id:S.seq++,...v});
+ dia=v.data;resetForm();if(persist()){render();toast(old?'Lançamento atualizado.':'Lançamento cadastrado.')}};
+$('#tb').onclick=e=>{const b=e.target.closest('button');if(!b)return;const t=S.tx.find(x=>x.id==b.dataset.id);if(!t)return;
+ if(b.dataset.a==='x'){
+  if(!confirm('Excluir o lançamento "'+t.hist+'" de '+brl(t.valor)+'?'))return;
+  if(S.fechados[t.data]&&!guard(t.data))return;
+  S.tx=S.tx.filter(x=>x!==t);persist();render();toast('Lançamento excluído.');
+ }else{
+  if(S.fechados[t.data]&&!guard(t.data))return;
+  edit=t.id;$('#fData').value=t.data;$('#fTp').value=t.tipo;$('#fForma').value=t.forma;$('#fCat').value=t.cat;$('#fHist').value=t.hist;$('#fVal').value=t.valor;
+  $('#bSv').textContent='Atualizar lançamento';$('#fTit').textContent='Editar lançamento';$('#bCn').hidden=false;$('#fHist').scrollIntoView({behavior:'smooth',block:'center'});$('#fCat').focus()}};
+
+/* ---------- Renderização ---------- */
+function render(){
+ $('#fData').max=$('#dia').max=hoje();$('#dia').value=dia;
+ const c=calc(dia),fe=S.fechados[dia];
+ $('#cAnt').textContent=brl(c.ant);$('#cEnt').textContent=brl(c.ent);$('#cSai').textContent=brl(c.sai);$('#cSal').textContent=brl(c.atual);
+ $('#cSalCard').className='card '+(c.atual>=0?'pos':'neg');
+ $('#st').textContent=fe?'Dia fechado':'Dia aberto';$('#st').className='st'+(fe?' fe':'');$('#st').title=fe?'Fechado em '+new Date(fe.em).toLocaleString('pt-BR'):'';
+ $('#bFechar').textContent=fe?'Reabrir dia':'Salvar movimentação diária';
+ $('#dTit').textContent='— '+fd(dia);
+ $('#dt').innerHTML=c.forma.map(x=>'<tr><td>'+x.f+'</td><td class="n">'+(x.e?brl(x.e):'—')+'</td><td class="n">'+(x.s?brl(x.s):'—')+'</td></tr>').join('')+
+  '<tr class="tot"><td>TOTAL ENTRADA / SAÍDA</td><td class="n">'+brl(c.ent)+'</td><td class="n">'+brl(c.sai)+'</td></tr>'+
+  '<tr><td>SALDO ANTERIOR</td><td class="n">'+brl(c.ant)+'</td><td></td></tr>'+
+  '<tr><td>SALDO ATUAL</td><td></td><td class="n">'+brl(c.atual)+'</td></tr>'+
+  '<tr><td>FECHAMENTO (movimento do dia)</td><td class="n" colspan="2">'+brl(c.fech)+'</td></tr>'+
+  '<tr class="tot"><td>FECHAMENTO '+(Math.abs(c.cE-c.cS)<.005?'(conferido)':'(DIVERGENTE)')+'</td><td class="n">'+brl(c.cE)+'</td><td class="n">'+brl(c.cS)+'</td></tr>';
+ if(document.activeElement!==$('#sIni'))$('#sIni').value=S.ini;
+ const L=filt(),o=ordem(),E=sum(L.filter(isR)),X=sum(L.filter(t=>!isR(t))),de=$('#fDe').value,ate=$('#fAte').value;
+ $('#tb').innerHTML=L.length?L.map(t=>'<tr><td>'+fd(t.data)+(S.fechados[t.data]?' <span title="Dia fechado">🔒</span>':'')+'</td><td>'+o[t.id]+'</td><td><span class="tg '+(isR(t)?'in':'out')+'">'+(isR(t)?'Receita':'Despesa')+'</span></td><td>'+esc(t.cat)+'</td><td>'+t.forma+'</td><td>'+esc(t.hist)+'</td><td class="n in">'+(isR(t)?brl(t.valor):'')+'</td><td class="n out">'+(isR(t)?'':brl(t.valor))+'</td><td class="ac"><button class="lk" data-a="e" data-id="'+t.id+'">Editar</button><button class="lk dg" data-a="x" data-id="'+t.id+'">Excluir</button></td></tr>').join('')
+  :'<tr><td colspan="9" class="empty">Nenhum lançamento encontrado. Ajuste os filtros ou cadastre um lançamento.</td></tr>';
+ $('#sum').innerHTML=(de&&ate&&de>ate?'<b style="color:#b3322e">Período inválido: "De" é posterior a "Até".</b>':'')+
+  '<span>Entradas: <b style="color:#087a53">'+brl(E)+'</b></span><span>Saídas: <b style="color:#b3322e">'+brl(X)+'</b></span><span>Resultado: <b>'+brl(r2(E-X))+'</b></span><span>'+L.length+' lançamento(s)</span>';
+ $('#pInfo').textContent='Relatório de fluxo de caixa — período: '+(de?fd(de):'início')+' a '+(ate?fd(ate):'hoje')+' | Tipo: '+$('#fTipo').selectedOptions[0].text+(($('#fQ').value.trim())?' | Busca: '+$('#fQ').value.trim():'')+' | Emitido em '+new Date().toLocaleString('pt-BR');
+ drawCharts(L);
+}
+
+/* ---------- Gráficos (Chart.js com fallback offline) ---------- */
+function drawCharts(L){
+ charts.forEach(c=>c.destroy());charts=[];
+ const ds=[...new Set(L.map(t=>t.data))].sort(),E=ds.map(d=>sum(L.filter(t=>t.data===d&&isR(t)))),X=ds.map(d=>sum(L.filter(t=>t.data===d&&!isR(t)))),
+  B=ds.map(d=>r2(S.ini+S.tx.filter(t=>t.data<=d).reduce((a,t)=>a+net(t),0))),tp=$('#cTipo').value,cm={};
+ L.filter(t=>t.tipo===tp).forEach(t=>cm[t.cat]=r2((cm[t.cat]||0)+t.valor));
+ const cl=Object.keys(cm),cv=cl.map(k=>cm[k]);let ok=!!window.Chart&&ds.length>0;
+ if(ok)try{
+  const P=tp==='R'?['#0b8f63','#2fb98a','#6fd3b0','#a7e6d0','#087a53']:['#d9443f','#ef7a6f','#f4a79f','#b3322e','#f8c9c3'];
+  charts.push(new Chart($('#cv1'),{type:'bar',data:{labels:ds.map(fd),datasets:[{label:'Entradas',data:E,backgroundColor:'#0b8f63'},{label:'Saídas',data:X,backgroundColor:'#d9443f'},{type:'line',label:'Saldo do caixa',data:B,borderColor:'#243b53',backgroundColor:'#243b53',tension:.25}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{ticks:{callback:v=>brl(v)}}},plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+brl(c.parsed.y)}}}}}));
+  charts.push(new Chart($('#cv2'),{type:'doughnut',data:{labels:cl,datasets:[{data:cv,backgroundColor:cl.map((_,i)=>P[i%P.length])}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.label+': '+brl(c.parsed)}}}}}));
+ }catch(e){ok=false;charts.forEach(c=>c.destroy());charts=[]}
+ document.querySelectorAll('.cw').forEach(w=>w.hidden=!ok);
+ $('#fb1').innerHTML=$('#fb2').innerHTML='';
+ if(!ok)fallback(ds,E,X,cl,cv,tp);
+}
+function fallback(ds,E,X,cl,cv,tp){
+ if(!ds.length){$('#fb1').innerHTML=$('#fb2').innerHTML='<p class="empty">Sem dados para os filtros atuais.</p>';return}
+ const W=Math.max(300,ds.length*72),H=170,m=Math.max(1,...E,...X);
+ $('#fb1').innerHTML='<div class="sc"><svg viewBox="0 0 '+W+' '+(H+24)+'" width="'+W+'" role="img" aria-label="Entradas e saídas por dia">'+ds.map((d,i)=>{const x=i*72+8,a=E[i]/m*H,b=X[i]/m*H;
+  return '<rect x="'+x+'" y="'+(H-a)+'" width="26" height="'+a+'" fill="#0b8f63"><title>'+fd(d)+' entradas '+brl(E[i])+'</title></rect><rect x="'+(x+30)+'" y="'+(H-b)+'" width="26" height="'+b+'" fill="#d9443f"><title>'+fd(d)+' saídas '+brl(X[i])+'</title></rect><text x="'+x+'" y="'+(H+16)+'" font-size="11" fill="#5f6b77">'+fd(d).slice(0,5)+'</text>'}).join('')+'</svg></div><p class="mut">Modo offline: gráficos simplificados (verde = entradas, vermelho = saídas).</p>';
+ const t=cv.reduce((a,b)=>a+b,0)||1;
+ $('#fb2').innerHTML=cl.length?cl.map((k,i)=>'<div class="br"><span>'+esc(k)+'</span><i style="width:'+(cv[i]/t*100)+'%" class="'+(tp==='R'?'gi':'go')+'"></i><b>'+(cv[i]/t*100).toFixed(1)+'% · '+brl(cv[i])+'</b></div>').join(''):'<p class="empty">Sem dados nesta seleção.</p>';
+}
+
+/* ---------- Exportação, backup e demais ações ---------- */
+function download(txt,name,type){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([txt],{type}));a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+$('#bCsv').onclick=()=>{const L=filt(),o=ordem();if(!L.length)return toast('Não há lançamentos para exportar com os filtros atuais.','err');
+ const q=v=>'"'+String(v).replace(/"/g,'""')+'"',tx=v=>q(/^[=+\-@]/.test(v)?"'"+v:v),n=v=>q(v.toFixed(2).replace('.',','));
+ const rows=[['Data','Nº ORDEM','Tipo','Categoria','Forma (TIPO)','HISTÓRICO','ENTRADA','SAÍDA'].map(q).join(';')].concat(L.map(t=>[q(fd(t.data)),o[t.id],q(isR(t)?'Receita':'Despesa'),tx(t.cat),q(t.forma),tx(t.hist),isR(t)?n(t.valor):q(''),isR(t)?q(''):n(t.valor)].join(';')));
+ download('\ufeff'+rows.join('\r\n'),'fluxo-de-caixa-'+hoje()+'.csv','text/csv;charset=utf-8');toast('CSV exportado.')};
+$('#bPrint').onclick=()=>window.print();
+$('#bSalvar').onclick=()=>{if(persist()){const d=new Date();toast('Dados salvos às '+pad(d.getHours())+':'+pad(d.getMinutes())+'.')}};
+$('#bBkp').onclick=()=>{download(JSON.stringify(S,null,2),'backup-fluxo-de-caixa-'+hoje()+'.json','application/json');toast('Backup exportado.')};
+$('#bImp').onclick=()=>$('#fImp').click();
+$('#fImp').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();
+ r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(x){return toast('Arquivo inválido: não é um JSON legível.','err')}
+  if(!valid(o))return toast('Backup inválido: a estrutura não corresponde a um backup deste sistema.','err');
+  if(!confirm('Importar este backup substituirá TODOS os dados atuais ('+o.tx.length+' lançamento(s) no arquivo). Continuar?'))return;
+  S=o;fixSeq();resetForm();persist();render();toast('Backup restaurado com sucesso.')};
+ r.onerror=()=>toast('Não foi possível ler o arquivo.','err');r.readAsText(f)};
+$('#bReset').onclick=()=>{if(!confirm('Resetar o sistema apaga TODOS os lançamentos e fechamentos. Exporte um backup antes se precisar. Continuar?'))return;
+ if(!confirm('Confirma novamente: apagar todos os dados?'))return;
+ S={v:1,ini:0,seq:1,fechados:{},tx:[]};resetForm();persist();render();toast('Sistema resetado.')};
+$('#sIni').onchange=e=>{const v=parseFloat(e.target.value);if(!(v>=0)){toast('O saldo inicial deve ser um número maior ou igual a zero.','err');e.target.value=S.ini;return}
+ if(Object.keys(S.fechados).length&&!confirm('Há dias fechados. Alterar o saldo inicial muda os saldos anteriores. Continuar?')){e.target.value=S.ini;return}
+ S.ini=r2(v);persist();render()};
+$('#dia').onchange=e=>{if(!e.target.value){e.target.value=dia;return}dia=e.target.value;if(!edit)$('#fData').value=dia;render()};
+['#fDe','#fAte','#fTipo','#fQ','#cTipo'].forEach(s=>$(s).addEventListener('input',render));
+$('#bLimpa').onclick=()=>{['#fDe','#fAte','#fQ'].forEach(s=>$(s).value='');$('#fTipo').value='';render()};
+
+/* ---------- Inicialização ---------- */
+try{const o=JSON.parse(localStorage.getItem(KEY));S=valid(o)?o:null}catch(e){S=null}
+if(!S){S=seed();persist()}
+fixSeq();$('#fData').value=dia;render();
+window.__fluxo={calc:()=>calc(dia),state:()=>S};
+})();
+</script>
+</body>
+</html>
